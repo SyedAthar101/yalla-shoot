@@ -20,13 +20,13 @@ class MatchDetailScreen extends StatelessWidget {
     return Expanded(
       child: Column(
         children: [
-          TeamLogo(url: logo, name: name, size: 96),
+          TeamLogo(url: logo, name: name, size: 104),
           const SizedBox(height: 10),
           Text(
             name,
             textAlign: TextAlign.center,
             style: const TextStyle(
-                fontSize: 16,
+                fontSize: 19,
                 fontWeight: FontWeight.bold,
                 color: Colors.white),
           ),
@@ -43,11 +43,11 @@ class MatchDetailScreen extends StatelessWidget {
           Icon(icon, size: 20, color: AppColors.redBright),
           const SizedBox(width: 12),
           SizedBox(
-            width: 90,
+            width: 100,
             child: Text(
               label,
               style: TextStyle(
-                  color: Colors.white.withOpacity(0.6), fontSize: 13),
+                  color: Colors.white.withOpacity(0.6), fontSize: 15),
             ),
           ),
           Expanded(
@@ -55,7 +55,7 @@ class MatchDetailScreen extends StatelessWidget {
               value.isEmpty ? 'غير معروف' : value,
               style: const TextStyle(
                   color: Colors.white,
-                  fontSize: 14,
+                  fontSize: 16,
                   fontWeight: FontWeight.w600),
             ),
           ),
@@ -69,6 +69,10 @@ class MatchDetailScreen extends StatelessWidget {
     final live = match.status == MatchStatus.live;
     final showScore =
         live || match.status == MatchStatus.finished;
+    final upcoming = match.status == MatchStatus.upcoming;
+    final kickoff = match.kickoffLocal;
+    final showCountdown =
+        upcoming && kickoff != null && kickoff.isAfter(DateTime.now());
     final pillLabel = match.statusText.isNotEmpty
         ? match.statusText
         : MatchStatusLabel.label(match);
@@ -84,7 +88,7 @@ class MatchDetailScreen extends StatelessWidget {
         ),
         title: Text(
           match.league,
-          style: const TextStyle(fontSize: 15, fontWeight: FontWeight.bold),
+          style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
         ),
         actions: [
           IconButton(
@@ -125,17 +129,22 @@ class MatchDetailScreen extends StatelessWidget {
                         child: Column(
                           children: [
                             Text(
-                              showScore ? match.scoreText : match.time,
+                              showScore
+                                  ? match.scoreText
+                                  : match.localTimeText,
                               style: TextStyle(
-                                fontSize: showScore ? 40 : 18,
+                                fontSize: showScore ? 46 : 22,
                                 fontWeight: FontWeight.bold,
                                 color: Colors.white,
                               ),
                             ),
                             const SizedBox(height: 4),
                             Text(
-                              showScore ? match.time : 'بتوقيت القاهرة',
+                              showScore
+                                  ? match.localTimeText
+                                  : 'بتوقيتك المحلي',
                               style: TextStyle(
+                                  fontSize: 15,
                                   color:
                                       Colors.white.withOpacity(0.75)),
                             ),
@@ -145,6 +154,19 @@ class MatchDetailScreen extends StatelessWidget {
                       _team(match.awayLogo, match.awayTeam),
                     ],
                   ),
+                  if (showCountdown) ...[
+                    const SizedBox(height: 16),
+                    Center(
+                      child: KickoffCountdown(
+                        kickoffLocal: kickoff,
+                        style: const TextStyle(
+                          fontSize: 20,
+                          fontWeight: FontWeight.bold,
+                          color: AppColors.gold,
+                        ),
+                      ),
+                    ),
+                  ],
                 ],
               ),
             ),
@@ -165,7 +187,7 @@ class MatchDetailScreen extends StatelessWidget {
                   Divider(height: 1, color: Colors.white.withOpacity(0.08)),
                   _infoRow(Icons.emoji_events, 'البطولة', match.league),
                   Divider(height: 1, color: Colors.white.withOpacity(0.08)),
-                  _infoRow(Icons.access_time, 'الوقت', match.time),
+                  _infoRow(Icons.access_time, 'الوقت', match.localTimeText),
                 ],
               ),
             ),
@@ -190,7 +212,7 @@ class MatchDetailScreen extends StatelessWidget {
                 'الموقع ينشر رابط البث عند اقتراب وقت المباراة.',
                 textAlign: TextAlign.center,
                 style: TextStyle(
-                    color: Colors.white.withOpacity(0.55), fontSize: 12),
+                    color: Colors.white.withOpacity(0.55), fontSize: 14),
               ),
             ],
           ],
