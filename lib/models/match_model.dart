@@ -84,6 +84,107 @@ class YallaMatch {
 
   String get scoreText => '$homeScore - $awayScore';
 
+  // ------------------------------------------------------------------
+  // Kickoff time: the site publishes match times as Africa/Cairo
+  // wall-clock time. Everything below converts that instant to the
+  // device's local timezone for display. No new dependency.
+  //
+  // Egypt DST rule (in force since 2023): clocks are UTC+3 during
+  // daylight saving, from the last Friday of April until the last
+  // Thursday of October, and UTC+2 the rest of the year.
+  // ------------------------------------------------------------------
+
+  static DateTime _lastWeekdayOfMonth(int year, int month, int weekday) {
+    // DateTime.utc(year, month + 1, 0) is the last day of [month].
+    var d = DateTime.utc(year, month + 1, 0);
+    while (d.weekday != weekday) {
+      d = d.subtract(const Duration(days: 1));
+    }
+    return d;
+  }
+
+  /// UTC offset of Africa/Cairo on the given (UTC) date.
+  static Duration cairoOffsetFor(DateTime date) {
+    final dstStart = _lastWeekdayOfMonth(date.year, 4, DateTime.friday);
+    final dstEnd = _lastWeekdayOfMonth(date.year, 10, DateTime.thursday);
+    final day = DateTime.utc(date.year, date.month, date.day);
+    final isDst = !day.isBefore(dstStart) && !day.isAfter(dstEnd);
+    return Duration(hours: isDst ? 3 : 2);
+  }
+
+  /// A Cairo wall-clock time on [date] (year/month/day) as a UTC instant.
+  static DateTime cairoToUtc(DateTime date, int hour, int minute) {
+    final wall =
+        DateTime.utc(date.year, date.month, date.day, hour, minute);
+    return wall.subtract(cairoOffsetFor(date));
+  }
+
+  /// Parse a site time string into a 24h time of day. Handles both
+  /// "19:00" and the site's usual "03:30 PM" (plus Arabic-Indic digits).
+  /// Returns null for anything that is not a time (live/finished labels).
+  static ({int hour, int minute})? parseTimeOfDay(String raw) {
+    var s = raw.trim();
+    if (s.isEmpty) return null;
+    // Normalize Arabic-Indic digits to Western digits.
+    s = s.split('').map((c) {
+      final code = c.codeUnitAt(0);
+      if (code >= 0x660 && code <= 0x669) {
+        return String.fromCharCode(0x30 + code - 0x660);
+      }
+      if (code >= 0x6F0 && code <= 0x6F9) {
+        return String.fromCharCode(0x30 + code - 0x6F0);
+      }
+      return c;
+    }).join();
+    final m = RegExp(r'^(\d{1,2}):(\d{2})(?::\d{2})?\s*([AaPp]\.?[Mm]\.?)?$')
+        .firstMatch(s);
+    if (m == null) return null;
+    var hour = int.parse(m.group(1)!);
+    final minute = int.parse(m.group(2)!);
+    final ampm = m.group(3);
+    if (ampm != null) {
+      final isPm = ampm.toLowerCase().startsWith('p');
+      if (isPm && hour < 12) hour += 12;
+      if (!isPm && hour == 12) hour = 0;
+    }
+    if (hour > 23 || minute > 59) return null;
+    return (hour: hour, minute: minute);
+  }
+
+  /// Kickoff as a UTC instant, built from this match's [day]
+  /// (today/tomorrow/yesterday, in Cairo) and its [time] string
+  /// (Cairo wall-clock). Null when the time is not a parseable
+  /// HH:MM (e.g. live / finished matches).
+  DateTime? get kickoffUtc {
+    final tod = parseTimeOfDay(time);
+    if (tod == null) return null;
+    // Cairo's "today": shift UTC now by the Cairo offset. DST only
+    // changes at Cairo midnight, so this is exact in practice.
+    final utcNow = DateTime.now().toUtc();
+    final cairoNow = utcNow.add(cairoOffsetFor(utcNow));
+    var date = DateTime.utc(cairoNow.year, cairoNow.month, cairoNow.day);
+    if (day == 'tomorrow') {
+      date = date.add(const Duration(days: 1));
+    } else if (day == 'yesterday') {
+      date = date.subtract(const Duration(days: 1));
+    }
+    return cairoToUtc(date, tod.hour, tod.minute);
+  }
+
+  /// Kickoff in the device's local timezone. Null when unparseable.
+  DateTime? get kickoffLocal => kickoffUtc?.toLocal();
+
+  /// Time to show in the UI: kickoff converted to the device's local
+  /// timezone, with the local timezone name, e.g. "19:00 PKT".
+  /// Falls back to the raw site time when it cannot be parsed.
+  String get localTimeText {
+    final local = kickoffLocal;
+    if (local == null) return time;
+    final hh = local.hour.toString().padLeft(2, '0');
+    final mm = local.minute.toString().padLeft(2, '0');
+    return '$hh:$mm ${DateTime.now().timeZoneName}';
+  }
+
   factory YallaMatch.fromJson(Map<String, dynamic> json, String day) {
     final home = (json['home_team'] ?? '').toString();
     final away = (json['away_team'] ?? '').toString();
