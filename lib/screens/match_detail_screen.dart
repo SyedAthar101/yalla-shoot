@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 
 import '../models/match_model.dart';
+import '../widgets/ui_kit.dart';
 import 'player_screen.dart';
 
 class MatchDetailScreen extends StatelessWidget {
@@ -15,42 +16,11 @@ class MatchDetailScreen extends StatelessWidget {
     required this.onFavorite,
   });
 
-  Widget _team(BuildContext context, String logo, String name, bool home) {
+  Widget _team(String logo, String name) {
     return Expanded(
       child: Column(
         children: [
-          Container(
-            width: 84,
-            height: 84,
-            decoration: BoxDecoration(
-              color: Colors.white.withOpacity(0.08),
-              shape: BoxShape.circle,
-            ),
-            clipBehavior: Clip.antiAlias,
-            child: logo.isEmpty
-                ? Center(
-                    child: Text(
-                      name.isNotEmpty ? name.characters.first : '?',
-                      style: const TextStyle(
-                          fontSize: 34,
-                          fontWeight: FontWeight.bold,
-                          color: Colors.white),
-                    ),
-                  )
-                : Image.network(
-                    logo,
-                    fit: BoxFit.contain,
-                    errorBuilder: (_, __, ___) => Center(
-                      child: Text(
-                        name.isNotEmpty ? name.characters.first : '?',
-                        style: const TextStyle(
-                            fontSize: 34,
-                            fontWeight: FontWeight.bold,
-                            color: Colors.white),
-                      ),
-                    ),
-                  ),
-          ),
+          TeamLogo(url: logo, name: name, size: 96),
           const SizedBox(height: 10),
           Text(
             name,
@@ -70,7 +40,7 @@ class MatchDetailScreen extends StatelessWidget {
       padding: const EdgeInsets.symmetric(vertical: 8),
       child: Row(
         children: [
-          Icon(icon, size: 20, color: const Color(0xFF931800)),
+          Icon(icon, size: 20, color: AppColors.redBright),
           const SizedBox(width: 12),
           SizedBox(
             width: 90,
@@ -97,10 +67,21 @@ class MatchDetailScreen extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final live = match.status == MatchStatus.live;
+    final showScore =
+        live || match.status == MatchStatus.finished;
+    final pillLabel = match.statusText.isNotEmpty
+        ? match.statusText
+        : MatchStatusLabel.label(match);
     return Scaffold(
-      backgroundColor: const Color(0xFF0E0E13),
+      backgroundColor: AppColors.background,
       appBar: AppBar(
-        backgroundColor: const Color(0xFF931800),
+        backgroundColor: Colors.transparent,
+        elevation: 0,
+        flexibleSpace: Container(
+          decoration: const BoxDecoration(
+            gradient: AppColors.appBarGradient,
+          ),
+        ),
         title: Text(
           match.league,
           style: const TextStyle(fontSize: 15, fontWeight: FontWeight.bold),
@@ -108,8 +89,7 @@ class MatchDetailScreen extends StatelessWidget {
         actions: [
           IconButton(
             icon: Icon(isFavorite ? Icons.star : Icons.star_border,
-                color:
-                    isFavorite ? const Color(0xFFFFC107) : Colors.white),
+                color: isFavorite ? AppColors.gold : Colors.white),
             onPressed: onFavorite,
           ),
         ],
@@ -122,59 +102,47 @@ class MatchDetailScreen extends StatelessWidget {
               width: double.infinity,
               padding: const EdgeInsets.all(20),
               decoration: BoxDecoration(
-                color: const Color(0xFF1B1B24),
+                gradient: AppColors.heroGradient,
                 borderRadius: BorderRadius.circular(20),
               ),
               child: Column(
                 children: [
-                  Container(
-                    padding: const EdgeInsets.symmetric(
-                        horizontal: 10, vertical: 4),
-                    decoration: BoxDecoration(
-                      color: (live
-                              ? const Color(0xFFE53935)
-                              : const Color(0xFF2E9E5B))
-                          .withOpacity(0.18),
-                      borderRadius: BorderRadius.circular(20),
+                  if (pillLabel.isNotEmpty)
+                    StatusPill(
+                      label: pillLabel,
+                      color: live
+                          ? Colors.white
+                          : Colors.white.withOpacity(0.85),
+                      isLive: live,
                     ),
-                    child: Text(
-                      match.statusText.isEmpty
-                          ? match.time
-                          : match.statusText,
-                      style: TextStyle(
-                        color: live
-                            ? const Color(0xFFE53935)
-                            : const Color(0xFF2E9E5B),
-                        fontWeight: FontWeight.bold,
-                      ),
-                    ),
-                  ),
                   const SizedBox(height: 18),
                   Row(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      _team(context, match.homeLogo, match.homeTeam, true),
+                      _team(match.homeLogo, match.homeTeam),
                       Padding(
-                        padding: const EdgeInsets.only(top: 18),
+                        padding: const EdgeInsets.only(top: 26),
                         child: Column(
                           children: [
                             Text(
-                              match.scoreText,
-                              style: const TextStyle(
-                                  fontSize: 32,
-                                  fontWeight: FontWeight.bold,
-                                  color: Colors.white),
+                              showScore ? match.scoreText : match.time,
+                              style: TextStyle(
+                                fontSize: showScore ? 40 : 18,
+                                fontWeight: FontWeight.bold,
+                                color: Colors.white,
+                              ),
                             ),
                             const SizedBox(height: 4),
                             Text(
-                              match.time,
+                              showScore ? match.time : 'بتوقيت القاهرة',
                               style: TextStyle(
-                                  color: Colors.white.withOpacity(0.6)),
+                                  color:
+                                      Colors.white.withOpacity(0.75)),
                             ),
                           ],
                         ),
                       ),
-                      _team(context, match.awayLogo, match.awayTeam, false),
+                      _team(match.awayLogo, match.awayTeam),
                     ],
                   ),
                 ],
@@ -183,57 +151,43 @@ class MatchDetailScreen extends StatelessWidget {
             const SizedBox(height: 16),
             Container(
               width: double.infinity,
-              padding: const EdgeInsets.all(16),
+              padding:
+                  const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
               decoration: BoxDecoration(
-                color: const Color(0xFF1B1B24),
+                color: AppColors.card,
                 borderRadius: BorderRadius.circular(20),
               ),
               child: Column(
                 children: [
                   _infoRow(Icons.tv, 'القناة', match.channel),
+                  Divider(height: 1, color: Colors.white.withOpacity(0.08)),
                   _infoRow(Icons.mic, 'المعلق', match.commentator),
+                  Divider(height: 1, color: Colors.white.withOpacity(0.08)),
                   _infoRow(Icons.emoji_events, 'البطولة', match.league),
+                  Divider(height: 1, color: Colors.white.withOpacity(0.08)),
                   _infoRow(Icons.access_time, 'الوقت', match.time),
                 ],
               ),
             ),
             const SizedBox(height: 20),
-            SizedBox(
-              width: double.infinity,
-              height: 52,
-              child: ElevatedButton.icon(
-                onPressed: match.hasStream
-                    ? () {
-                        Navigator.of(context).push(
-                          MaterialPageRoute(
-                            builder: (_) => PlayerScreen(match: match),
-                          ),
-                        );
-                      }
-                    : null,
-                icon: const Icon(Icons.play_arrow, size: 26),
-                label: Text(
-                  match.hasStream
-                      ? 'شاهد المباراة الآن'
-                      : 'البث غير متاح بعد — تحقق وقت المباراة',
-                  style: const TextStyle(
-                      fontSize: 16, fontWeight: FontWeight.bold),
-                ),
-                style: ElevatedButton.styleFrom(
-                  backgroundColor: const Color(0xFF931800),
-                  foregroundColor: Colors.white,
-                  disabledBackgroundColor: Colors.white12,
-                  disabledForegroundColor: Colors.white38,
-                  shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(14),
-                  ),
-                ),
-              ),
-            ),
-            if (!match.hasStream) ...[
+            if (match.hasStream)
+              GradientButton(
+                label: 'شاهد المباراة الآن',
+                icon: Icons.play_arrow,
+                height: 52,
+                onPressed: () {
+                  Navigator.of(context).push(
+                    MaterialPageRoute(
+                      builder: (_) => PlayerScreen(match: match),
+                    ),
+                  );
+                },
+              )
+            else ...[
+              const MutedLabel(text: 'البث غير متاح بعد'),
               const SizedBox(height: 10),
               Text(
-                'الموقع ينشر رابط البث عند اقتراب المباراة — اسحب للتحديث.',
+                'الموقع ينشر رابط البث عند اقتراب وقت المباراة.',
                 textAlign: TextAlign.center,
                 style: TextStyle(
                     color: Colors.white.withOpacity(0.55), fontSize: 12),
