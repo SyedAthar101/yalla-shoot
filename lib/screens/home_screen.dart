@@ -20,11 +20,13 @@ class HomeScreen extends StatefulWidget {
 class _HomeScreenState extends State<HomeScreen>
     with SingleTickerProviderStateMixin {
   late final TabController _tabs;
-  final List<String> _days = ['today', 'tomorrow', 'yesterday'];
+  // Order: Yesterday | Today | Tomorrow — Today is the centre tab
+  // and the default tab when the app opens.
+  final List<String> _days = ['yesterday', 'today', 'tomorrow'];
   final List<String> _dayLabels = [
+    'مباريات الأمس',
     'مباريات اليوم',
     'مباريات الغد',
-    'مباريات الأمس',
   ];
   final Map<String, List<YallaMatch>> _cache = {};
   final Map<String, bool> _loading = {};
@@ -40,7 +42,7 @@ class _HomeScreenState extends State<HomeScreen>
   @override
   void initState() {
     super.initState();
-    _tabs = TabController(length: 3, vsync: this);
+    _tabs = TabController(length: 3, vsync: this, initialIndex: 1);
     _tabs.addListener(() {
       if (_tabs.indexIsChanging) return;
       _load(_days[_tabs.index]);
@@ -170,7 +172,7 @@ class _HomeScreenState extends State<HomeScreen>
                 onTap: () => _tabs.animateTo(i),
                 child: AnimatedContainer(
                   duration: const Duration(milliseconds: 200),
-                  padding: const EdgeInsets.symmetric(vertical: 10),
+                  padding: const EdgeInsets.symmetric(vertical: 12),
                   decoration: BoxDecoration(
                     gradient: selected ? AppColors.redGradient : null,
                     borderRadius: BorderRadius.circular(24),
@@ -183,7 +185,7 @@ class _HomeScreenState extends State<HomeScreen>
                           selected ? Colors.white : Colors.white60,
                       fontWeight:
                           selected ? FontWeight.bold : FontWeight.normal,
-                      fontSize: 13,
+                      fontSize: 16,
                     ),
                   ),
                 ),
@@ -221,7 +223,7 @@ class _HomeScreenState extends State<HomeScreen>
                   'مباشر فقط',
                   style: TextStyle(
                     color: _liveOnly ? Colors.white : Colors.white70,
-                    fontSize: 12,
+                    fontSize: 14,
                   ),
                 ),
               ],
@@ -241,7 +243,7 @@ class _HomeScreenState extends State<HomeScreen>
                   label: Text(league,
                       style: TextStyle(
                           color: selected ? Colors.white : Colors.white70,
-                          fontSize: 12)),
+                          fontSize: 14)),
                   selected: selected,
                   selectedColor: AppColors.red,
                   backgroundColor: AppColors.card,
@@ -269,7 +271,7 @@ class _HomeScreenState extends State<HomeScreen>
               const Text(
                 'مباشر الآن',
                 style: TextStyle(
-                  fontSize: 17,
+                  fontSize: 20,
                   fontWeight: FontWeight.bold,
                   color: Colors.white,
                 ),
@@ -286,7 +288,7 @@ class _HomeScreenState extends State<HomeScreen>
                   '${live.length}',
                   style: const TextStyle(
                     color: Colors.white,
-                    fontSize: 12,
+                    fontSize: 14,
                     fontWeight: FontWeight.bold,
                   ),
                 ),
@@ -295,7 +297,7 @@ class _HomeScreenState extends State<HomeScreen>
           ),
         ),
         SizedBox(
-          height: 216,
+          height: 240,
           child: ListView.separated(
             scrollDirection: Axis.horizontal,
             padding:
@@ -342,7 +344,7 @@ class _HomeScreenState extends State<HomeScreen>
                 child: Text(
                   entry.key,
                   style: const TextStyle(
-                    fontSize: 15,
+                    fontSize: 18,
                     fontWeight: FontWeight.bold,
                     color: Colors.white,
                   ),
@@ -359,7 +361,7 @@ class _HomeScreenState extends State<HomeScreen>
                   '${entry.value.length}',
                   style: TextStyle(
                     color: Colors.white.withOpacity(0.7),
-                    fontSize: 12,
+                    fontSize: 14,
                     fontWeight: FontWeight.bold,
                   ),
                 ),
@@ -404,14 +406,15 @@ class _HomeScreenState extends State<HomeScreen>
             const Icon(Icons.wifi_off, size: 48, color: Colors.white38),
             const SizedBox(height: 10),
             Text(_error[day]!,
-                style: const TextStyle(color: Colors.white70)),
+                style:
+                    const TextStyle(color: Colors.white70, fontSize: 16)),
             const SizedBox(height: 12),
             ElevatedButton(
               onPressed: () => _load(day),
               style: ElevatedButton.styleFrom(
                   backgroundColor: AppColors.red),
               child: const Text('إعادة المحاولة',
-                  style: TextStyle(color: Colors.white)),
+                  style: TextStyle(color: Colors.white, fontSize: 16)),
             ),
           ],
         ),
@@ -425,7 +428,8 @@ class _HomeScreenState extends State<HomeScreen>
               : _liveOnly
                   ? 'لا توجد مباريات مباشرة الآن'
                   : 'لا توجد مباريات في هذا اليوم',
-          style: TextStyle(color: Colors.white.withOpacity(0.6)),
+          style: TextStyle(
+              color: Colors.white.withOpacity(0.6), fontSize: 15),
         ),
       );
     }
@@ -442,7 +446,7 @@ class _HomeScreenState extends State<HomeScreen>
             child: Text(
               'المصدر: yallah.media — يتم التحديث تلقائياً كل دقيقة',
               style: TextStyle(
-                  color: Colors.white.withOpacity(0.4), fontSize: 11),
+                  color: Colors.white.withOpacity(0.4), fontSize: 13),
             ),
           ),
           const SizedBox(height: 16),
@@ -468,10 +472,10 @@ class _HomeScreenState extends State<HomeScreen>
             ? TextField(
                 autofocus: true,
                 onChanged: (v) => setState(() => _query = v),
-                style: const TextStyle(color: Colors.white),
+                style: const TextStyle(color: Colors.white, fontSize: 15),
                 decoration: const InputDecoration(
                   hintText: 'ابحث عن فريق أو بطولة...',
-                  hintStyle: TextStyle(color: Colors.white60),
+                  hintStyle: TextStyle(color: Colors.white60, fontSize: 15),
                   border: InputBorder.none,
                 ),
               )
@@ -497,10 +501,10 @@ class _HomeScreenState extends State<HomeScreen>
                     children: [
                       Text('يلا شوت',
                           style: TextStyle(
-                              fontSize: 19, fontWeight: FontWeight.bold)),
+                              fontSize: 22, fontWeight: FontWeight.bold)),
                       Text('Yalla Shoot — مباريات اليوم بث مباشر',
                           style: TextStyle(
-                              fontSize: 11, color: Colors.white70)),
+                              fontSize: 13, color: Colors.white70)),
                     ],
                   ),
                 ],
@@ -560,7 +564,7 @@ class _LiveFeaturedCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return SizedBox(
-      width: 280,
+      width: 300,
       child: Card(
         color: AppColors.card,
         elevation: 0,
@@ -594,7 +598,7 @@ class _LiveFeaturedCard extends StatelessWidget {
                         overflow: TextOverflow.ellipsis,
                         style: TextStyle(
                           color: Colors.white.withOpacity(0.6),
-                          fontSize: 12,
+                          fontSize: 14,
                         ),
                       ),
                     ),
@@ -619,7 +623,7 @@ class _LiveFeaturedCard extends StatelessWidget {
                             overflow: TextOverflow.ellipsis,
                             style: const TextStyle(
                               fontWeight: FontWeight.bold,
-                              fontSize: 12,
+                              fontSize: 15,
                               color: Colors.white,
                             ),
                           ),
@@ -631,16 +635,16 @@ class _LiveFeaturedCard extends StatelessWidget {
                         Text(
                           match.scoreText,
                           style: const TextStyle(
-                            fontSize: 26,
+                            fontSize: 32,
                             fontWeight: FontWeight.bold,
                             color: Colors.white,
                           ),
                         ),
                         const SizedBox(height: 2),
                         Text(
-                          match.time,
+                          match.localTimeText,
                           style: TextStyle(
-                            fontSize: 11,
+                            fontSize: 14,
                             color: Colors.white.withOpacity(0.5),
                           ),
                         ),
@@ -662,7 +666,7 @@ class _LiveFeaturedCard extends StatelessWidget {
                             overflow: TextOverflow.ellipsis,
                             style: const TextStyle(
                               fontWeight: FontWeight.bold,
-                              fontSize: 12,
+                              fontSize: 15,
                               color: Colors.white,
                             ),
                           ),
@@ -677,7 +681,7 @@ class _LiveFeaturedCard extends StatelessWidget {
                     label: 'شاهد الآن',
                     icon: Icons.play_arrow,
                     onPressed: onWatch,
-                    height: 40,
+                    height: 46,
                   )
                 else
                   const MutedLabel(text: 'البث غير متاح بعد'),
