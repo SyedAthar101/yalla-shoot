@@ -52,14 +52,33 @@ class YallaMatch {
   }
 
   /// A stream link is only playable when it points somewhere other than
-  /// the homepage itself. The website uses https://yallah.media/ as a
-  /// placeholder until the match link is published.
+  /// the homepage / match-list pages themselves. The website currently
+  /// links every match card to its homepage (yallah.media redirects to
+  /// yallamedia.info), so that link must NOT count as a stream — otherwise
+  /// tapping a match would just open the homepage again in the player.
+  /// A real per-match link (a match page or an external player link) is
+  /// the only thing that counts as a stream.
   bool get hasStream {
     final u = streamUrl.trim();
     if (u.isEmpty) return false;
-    if (u == 'https://yallah.media/' || u == 'https://yallah.media') {
-      return false;
-    }
+    final n = u.toLowerCase().replaceAll(RegExp(r'/+$'), '');
+    const noStream = {
+      'https://yallah.media',
+      'http://yallah.media',
+      'https://www.yallah.media',
+      'https://yallamedia.info',
+      'http://yallamedia.info',
+      'https://www.yallamedia.info',
+      'https://yallah.media/matches-today',
+      'https://yallah.media/matches-tomorrow',
+      'https://yallah.media/matches-yesterday',
+      'https://yallah.media/yalla-live',
+      'https://yallamedia.info/matches-today',
+      'https://yallamedia.info/matches-tomorrow',
+      'https://yallamedia.info/matches-yesterday',
+      'https://yallamedia.info/yalla-live',
+    };
+    if (noStream.contains(n)) return false;
     return u.startsWith('http');
   }
 

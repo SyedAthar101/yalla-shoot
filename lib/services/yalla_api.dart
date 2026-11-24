@@ -10,14 +10,18 @@ import '../models/match_model.dart';
 ///
 /// Priority:
 ///   1. The official JSON feed from the Yalla Matches API plugin
-///      (https://yallah.media/wp-json/yalla/v1/matches) — install the
-///      plugin in wordpress-plugin/ on yallah.media and this becomes
+///      (https://yallamedia.info/wp-json/yalla/v1/matches) — install the
+///      plugin in wordpress-plugin/ on the site and this becomes
 ///      the live source, updated whenever the site is updated.
 ///   2. Fallback: parse the site's own rendered homepage for the day
 ///      (today / tomorrow / yesterday). Same data the website shows,
 ///      no third-party source involved.
+///
+/// Note: yallah.media 301-redirects to yallamedia.info (the site's
+/// canonical domain), so the app talks to yallamedia.info directly
+/// instead of depending on that redirect on every request.
 class YallaApi {
-  static const String siteBase = 'https://yallah.media';
+  static const String siteBase = 'https://yallamedia.info';
   static const String jsonFeedBase = '$siteBase/wp-json/yalla/v1/matches';
 
   static String dayUrl(String day) {
@@ -48,7 +52,7 @@ class YallaApi {
     final uri = Uri.parse('$jsonFeedBase?day=$day');
     final res = await http
         .get(uri, headers: {'Accept': 'application/json'})
-        .timeout(const Duration(seconds: 10));
+        .timeout(const Duration(seconds: 5));
     if (res.statusCode != 200) return [];
     final decoded = jsonDecode(utf8.decode(res.bodyBytes));
     final list = decoded is Map ? decoded['matches'] : decoded;
@@ -66,7 +70,7 @@ class YallaApi {
       'User-Agent':
           'Mozilla/5.0 (Linux; Android 13) YallaShootApp/1.0',
       'Accept': 'text/html',
-    }).timeout(const Duration(seconds: 15));
+    }).timeout(const Duration(seconds: 30));
     if (res.statusCode != 200) {
       throw Exception('yallah.media se data nahi mila (${res.statusCode})');
     }
