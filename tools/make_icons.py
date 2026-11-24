@@ -71,6 +71,13 @@ def main():
         icon = make_icon(size, logo_path)
         icon.save(os.path.join(outdir, "ic_launcher.png"))
         print("wrote", folder, size)
+    # Also generate the Flutter AppBar logo asset (512px, same artwork).
+    # The repo cannot carry the binary PNG, so CI builds it here before
+    # `flutter build apk` (pubspec registers assets/logo.png).
+    asset_dir = os.path.join(os.path.dirname(__file__), "..", "assets")
+    os.makedirs(asset_dir, exist_ok=True)
+    make_icon(512, logo_path).save(os.path.join(asset_dir, "logo.png"))
+    print("wrote assets/logo.png 512")
 
 if __name__ == "__main__":
     main()
