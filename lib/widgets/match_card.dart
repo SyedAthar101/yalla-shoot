@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 
 import '../models/match_model.dart';
+import 'ui_kit.dart';
 
 class MatchCard extends StatelessWidget {
   final YallaMatch match;
@@ -8,88 +9,33 @@ class MatchCard extends StatelessWidget {
   final VoidCallback onTap;
   final VoidCallback onFavorite;
 
+  /// Opens the in-app player. Falls back to [onTap] (match details,
+  /// which also has a Watch button) when not provided.
+  final VoidCallback? onWatch;
+
   const MatchCard({
     super.key,
     required this.match,
     required this.isFavorite,
     required this.onTap,
     required this.onFavorite,
+    this.onWatch,
   });
-
-  Color _statusColor(BuildContext context) {
-    switch (match.status) {
-      case MatchStatus.live:
-        return const Color(0xFFE53935);
-      case MatchStatus.finished:
-        return Colors.grey;
-      case MatchStatus.upcoming:
-        return const Color(0xFF2E9E5B);
-      case MatchStatus.unknown:
-        return Colors.grey;
-    }
-  }
-
-  String get _statusLabel {
-    if (match.statusText.isNotEmpty) return match.statusText;
-    switch (match.status) {
-      case MatchStatus.live:
-        return 'جارية الان';
-      case MatchStatus.finished:
-        return 'انتهت';
-      case MatchStatus.upcoming:
-        return 'لم تبدأ بعد';
-      case MatchStatus.unknown:
-        return '';
-    }
-  }
-
-  Widget _logo(String url, String name) {
-    return Container(
-      width: 52,
-      height: 52,
-      decoration: BoxDecoration(
-        color: Colors.white.withOpacity(0.08),
-        shape: BoxShape.circle,
-      ),
-      clipBehavior: Clip.antiAlias,
-      child: url.isEmpty
-          ? Center(
-              child: Text(
-                name.isNotEmpty ? name.characters.first : '?',
-                style: const TextStyle(
-                    fontSize: 22,
-                    fontWeight: FontWeight.bold,
-                    color: Colors.white),
-              ),
-            )
-          : Image.network(
-              url,
-              fit: BoxFit.contain,
-              errorBuilder: (_, __, ___) => Center(
-                child: Text(
-                  name.isNotEmpty ? name.characters.first : '?',
-                  style: const TextStyle(
-                      fontSize: 22,
-                      fontWeight: FontWeight.bold,
-                      color: Colors.white),
-                ),
-              ),
-            ),
-    );
-  }
 
   @override
   Widget build(BuildContext context) {
     final live = match.status == MatchStatus.live;
+    final showScore =
+        live || match.status == MatchStatus.finished;
     return Card(
-      color: const Color(0xFF1B1B24),
+      color: AppColors.card,
       elevation: 0,
       margin: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
       shape: RoundedRectangleBorder(
         borderRadius: BorderRadius.circular(16),
         side: BorderSide(
           color: live
-              ? const Color(0xFF931800).withOpacity(0.7)
+              ? AppColors.red.withOpacity(0.7)
               : Colors.white.withOpacity(0.07),
         ),
       ),
@@ -102,36 +48,10 @@ class MatchCard extends StatelessWidget {
             children: [
               Row(
                 children: [
-                  Container(
-                    padding: const EdgeInsets.symmetric(
-                        horizontal: 8, vertical: 3),
-                    decoration: BoxDecoration(
-                      color: _statusColor(context).withOpacity(0.18),
-                      borderRadius: BorderRadius.circular(20),
-                    ),
-                    child: Row(
-                      mainAxisSize: MainAxisSize.min,
-                      children: [
-                        if (live)
-                          Container(
-                            width: 7,
-                            height: 7,
-                            margin: const EdgeInsets.only(left: 4),
-                            decoration: const BoxDecoration(
-                              color: Color(0xFFE53935),
-                              shape: BoxShape.circle,
-                            ),
-                          ),
-                        Text(
-                          _statusLabel,
-                          style: TextStyle(
-                            color: _statusColor(context),
-                            fontWeight: FontWeight.bold,
-                            fontSize: 12,
-                          ),
-                        ),
-                      ],
-                    ),
+                  StatusPill(
+                    label: MatchStatusLabel.label(match),
+                    color: MatchStatusLabel.color(match),
+                    isLive: live,
                   ),
                   const SizedBox(width: 8),
                   Expanded(
@@ -149,7 +69,7 @@ class MatchCard extends StatelessWidget {
                     icon: Icon(
                       isFavorite ? Icons.star : Icons.star_border,
                       color: isFavorite
-                          ? const Color(0xFFFFC107)
+                          ? AppColors.gold
                           : Colors.white54,
                       size: 22,
                     ),
@@ -165,7 +85,11 @@ class MatchCard extends StatelessWidget {
                   Expanded(
                     child: Column(
                       children: [
-                        _logo(match.homeLogo, match.homeTeam),
+                        TeamLogo(
+                          url: match.homeLogo,
+                          name: match.homeTeam,
+                          size: 56,
+                        ),
                         const SizedBox(height: 6),
                         Text(
                           match.homeTeam,
@@ -184,23 +108,16 @@ class MatchCard extends StatelessWidget {
                   Column(
                     children: [
                       Text(
-                        live || match.status == MatchStatus.finished
-                            ? match.scoreText
-                            : match.time,
+                        showScore ? match.scoreText : match.time,
                         style: TextStyle(
-                          fontSize:
-                              live || match.status == MatchStatus.finished
-                                  ? 24
-                                  : 15,
+                          fontSize: showScore ? 28 : 16,
                           fontWeight: FontWeight.bold,
                           color: Colors.white,
                         ),
                       ),
                       const SizedBox(height: 2),
                       Text(
-                        live || match.status == MatchStatus.finished
-                            ? match.time
-                            : 'بتوقيت القاهرة',
+                        showScore ? match.time : 'بتوقيت القاهرة',
                         style: TextStyle(
                           fontSize: 11,
                           color: Colors.white.withOpacity(0.5),
@@ -211,7 +128,11 @@ class MatchCard extends StatelessWidget {
                   Expanded(
                     child: Column(
                       children: [
-                        _logo(match.awayLogo, match.awayTeam),
+                        TeamLogo(
+                          url: match.awayLogo,
+                          name: match.awayTeam,
+                          size: 56,
+                        ),
                         const SizedBox(height: 6),
                         Text(
                           match.awayTeam,
@@ -264,18 +185,17 @@ class MatchCard extends StatelessWidget {
                       ),
                     ),
                   ],
-                  const SizedBox(width: 8),
-                  Icon(
-                    match.hasStream
-                        ? Icons.play_circle_fill
-                        : Icons.schedule,
-                    size: 16,
-                    color: match.hasStream
-                        ? const Color(0xFF931800)
-                        : Colors.white38,
-                  ),
                 ],
               ),
+              const SizedBox(height: 10),
+              if (match.hasStream)
+                GradientButton(
+                  label: 'شاهد الآن',
+                  icon: Icons.play_arrow,
+                  onPressed: onWatch ?? onTap,
+                )
+              else
+                const MutedLabel(text: 'البث غير متاح بعد'),
             ],
           ),
         ),
