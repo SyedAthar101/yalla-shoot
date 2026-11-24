@@ -1,7 +1,7 @@
 name: yalla_shoot
 description: "Yalla Shoot - يلا شوت | مباريات اليوم بث مباشر - official app for yallah.media"
 publish_to: 'none'
-version: 1.1.0+4
+version: 1.2.0+5
 
 environment:
   sdk: ^3.4.0
