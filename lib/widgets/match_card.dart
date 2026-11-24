@@ -27,6 +27,10 @@ class MatchCard extends StatelessWidget {
     final live = match.status == MatchStatus.live;
     final showScore =
         live || match.status == MatchStatus.finished;
+    final upcoming = match.status == MatchStatus.upcoming;
+    final kickoff = match.kickoffLocal;
+    final showCountdown =
+        upcoming && kickoff != null && kickoff.isAfter(DateTime.now());
     return Card(
       color: AppColors.card,
       elevation: 0,
@@ -61,7 +65,7 @@ class MatchCard extends StatelessWidget {
                       overflow: TextOverflow.ellipsis,
                       style: TextStyle(
                         color: Colors.white.withOpacity(0.6),
-                        fontSize: 12,
+                        fontSize: 14,
                       ),
                     ),
                   ),
@@ -71,7 +75,7 @@ class MatchCard extends StatelessWidget {
                       color: isFavorite
                           ? AppColors.gold
                           : Colors.white54,
-                      size: 22,
+                      size: 26,
                     ),
                     onPressed: onFavorite,
                     padding: EdgeInsets.zero,
@@ -88,7 +92,7 @@ class MatchCard extends StatelessWidget {
                         TeamLogo(
                           url: match.homeLogo,
                           name: match.homeTeam,
-                          size: 56,
+                          size: 64,
                         ),
                         const SizedBox(height: 6),
                         Text(
@@ -98,7 +102,7 @@ class MatchCard extends StatelessWidget {
                           overflow: TextOverflow.ellipsis,
                           style: const TextStyle(
                             fontWeight: FontWeight.bold,
-                            fontSize: 13,
+                            fontSize: 16,
                             color: Colors.white,
                           ),
                         ),
@@ -108,18 +112,18 @@ class MatchCard extends StatelessWidget {
                   Column(
                     children: [
                       Text(
-                        showScore ? match.scoreText : match.time,
+                        showScore ? match.scoreText : match.localTimeText,
                         style: TextStyle(
-                          fontSize: showScore ? 28 : 16,
+                          fontSize: showScore ? 34 : 20,
                           fontWeight: FontWeight.bold,
                           color: Colors.white,
                         ),
                       ),
                       const SizedBox(height: 2),
                       Text(
-                        showScore ? match.time : 'بتوقيت القاهرة',
+                        showScore ? match.localTimeText : 'بتوقيتك المحلي',
                         style: TextStyle(
-                          fontSize: 11,
+                          fontSize: 13,
                           color: Colors.white.withOpacity(0.5),
                         ),
                       ),
@@ -131,7 +135,7 @@ class MatchCard extends StatelessWidget {
                         TeamLogo(
                           url: match.awayLogo,
                           name: match.awayTeam,
-                          size: 56,
+                          size: 64,
                         ),
                         const SizedBox(height: 6),
                         Text(
@@ -141,7 +145,7 @@ class MatchCard extends StatelessWidget {
                           overflow: TextOverflow.ellipsis,
                           style: const TextStyle(
                             fontWeight: FontWeight.bold,
-                            fontSize: 13,
+                            fontSize: 16,
                             color: Colors.white,
                           ),
                         ),
@@ -150,13 +154,19 @@ class MatchCard extends StatelessWidget {
                   ),
                 ],
               ),
+              if (showCountdown) ...[
+                const SizedBox(height: 10),
+                Center(
+                  child: KickoffCountdown(kickoffLocal: kickoff),
+                ),
+              ],
               const SizedBox(height: 10),
               Divider(height: 1, color: Colors.white.withOpacity(0.08)),
               const SizedBox(height: 8),
               Row(
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
-                  const Icon(Icons.tv, size: 14, color: Colors.white54),
+                  const Icon(Icons.tv, size: 17, color: Colors.white54),
                   const SizedBox(width: 4),
                   Flexible(
                     child: Text(
@@ -165,21 +175,21 @@ class MatchCard extends StatelessWidget {
                           : match.channel,
                       overflow: TextOverflow.ellipsis,
                       style: TextStyle(
-                        fontSize: 12,
+                        fontSize: 14,
                         color: Colors.white.withOpacity(0.65),
                       ),
                     ),
                   ),
                   if (match.commentator.isNotEmpty) ...[
                     const SizedBox(width: 12),
-                    const Icon(Icons.mic, size: 14, color: Colors.white54),
+                    const Icon(Icons.mic, size: 17, color: Colors.white54),
                     const SizedBox(width: 4),
                     Flexible(
                       child: Text(
                         match.commentator,
                         overflow: TextOverflow.ellipsis,
                         style: TextStyle(
-                          fontSize: 12,
+                          fontSize: 14,
                           color: Colors.white.withOpacity(0.65),
                         ),
                       ),
