@@ -72,7 +72,7 @@ class YallaMatch {
     final statusText = (json['status_text'] ?? '').toString();
     final css = (json['status_class'] ?? '').toString();
     return YallaMatch(
-      id: (json['id'] ?? '${day}_${home}_vs_$away\_$time').toString(),
+      id: (json['id'] ?? '${day}_${home}_vs_${away}_$time').toString(),
       homeTeam: home,
       awayTeam: away,
       homeLogo: (json['home_logo'] ?? '').toString(),

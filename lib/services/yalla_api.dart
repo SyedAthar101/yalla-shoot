@@ -109,7 +109,7 @@ class YallaApi {
       final home = names[0];
       final away = names[1];
       out.add(YallaMatch(
-        id: '${day}_${home}_vs_$away\_$time',
+        id: '${day}_${home}_vs_${away}_$time',
         homeTeam: home,
         awayTeam: away,
         homeLogo: logos.isNotEmpty ? logos[0] : '',
