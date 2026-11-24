@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 
 import '../models/match_model.dart';
@@ -134,7 +136,7 @@ class StatusPill extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
       decoration: BoxDecoration(
         color: color.withOpacity(0.18),
         borderRadius: BorderRadius.circular(20),
@@ -151,7 +153,7 @@ class StatusPill extends StatelessWidget {
             style: TextStyle(
               color: color,
               fontWeight: FontWeight.bold,
-              fontSize: 12,
+              fontSize: 15,
             ),
           ),
         ],
@@ -221,7 +223,7 @@ class GradientButton extends StatelessWidget {
     required this.label,
     required this.icon,
     required this.onPressed,
-    this.height = 44,
+    this.height = 50,
   });
 
   @override
@@ -248,13 +250,13 @@ class GradientButton extends StatelessWidget {
           child: Row(
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
-              Icon(icon, color: Colors.white, size: 21),
+              Icon(icon, color: Colors.white, size: 24),
               const SizedBox(width: 6),
               Text(
                 label,
                 style: const TextStyle(
                   color: Colors.white,
-                  fontSize: 15,
+                  fontSize: 18,
                   fontWeight: FontWeight.bold,
                 ),
               ),
@@ -277,7 +279,7 @@ class MutedLabel extends StatelessWidget {
   Widget build(BuildContext context) {
     return Container(
       width: double.infinity,
-      padding: const EdgeInsets.symmetric(vertical: 10),
+      padding: const EdgeInsets.symmetric(vertical: 12),
       decoration: BoxDecoration(
         color: Colors.white.withOpacity(0.06),
         borderRadius: BorderRadius.circular(10),
@@ -285,12 +287,12 @@ class MutedLabel extends StatelessWidget {
       child: Row(
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
-          const Icon(Icons.schedule, size: 16, color: Colors.white38),
+          const Icon(Icons.schedule, size: 19, color: Colors.white38),
           const SizedBox(width: 6),
           Text(
             text,
             style: TextStyle(
-              fontSize: 13,
+              fontSize: 16,
               color: Colors.white.withOpacity(0.55),
             ),
           ),
@@ -368,6 +370,99 @@ class SkeletonCard extends StatelessWidget {
           _skeletonBar(double.infinity, 12),
         ],
       ),
+    );
+  }
+}
+
+/// Format a countdown as HH:MM:SS, prefixed with days when 24h or more
+/// away, e.g. "04:12:33" or "1d 04:12:33".
+String formatCountdown(Duration remaining) {
+  if (remaining.isNegative) remaining = Duration.zero;
+  final totalSeconds = remaining.inSeconds;
+  final days = totalSeconds ~/ 86400;
+  final hours = (totalSeconds % 86400) ~/ 3600;
+  final minutes = (totalSeconds % 3600) ~/ 60;
+  final seconds = totalSeconds % 60;
+  String two(int n) => n.toString().padLeft(2, '0');
+  final hms = '${two(hours)}:${two(minutes)}:${two(seconds)}';
+  return days > 0 ? '${days}d $hms' : hms;
+}
+
+/// Live ticking countdown to kickoff, updating every second.
+/// Only this small text rebuilds each tick — never the whole list.
+/// When kickoff passes the timer stops and the widget disappears,
+/// so the match status takes its place.
+class KickoffCountdown extends StatefulWidget {
+  final DateTime kickoffLocal;
+  final TextStyle? style;
+
+  const KickoffCountdown({
+    super.key,
+    required this.kickoffLocal,
+    this.style,
+  });
+
+  @override
+  State<KickoffCountdown> createState() => _KickoffCountdownState();
+}
+
+class _KickoffCountdownState extends State<KickoffCountdown> {
+  Timer? _timer;
+  Duration _remaining = Duration.zero;
+
+  @override
+  void initState() {
+    super.initState();
+    _update();
+    _timer = Timer.periodic(const Duration(seconds: 1), (_) => _update());
+  }
+
+  @override
+  void didUpdateWidget(KickoffCountdown oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    if (oldWidget.kickoffLocal != widget.kickoffLocal) {
+      _timer?.cancel();
+      _update();
+      _timer = Timer.periodic(const Duration(seconds: 1), (_) => _update());
+    }
+  }
+
+  void _update() {
+    final remaining = widget.kickoffLocal.difference(DateTime.now());
+    if (remaining <= Duration.zero) {
+      _timer?.cancel();
+      _timer = null;
+      if (mounted) setState(() => _remaining = Duration.zero);
+      return;
+    }
+    if (mounted) setState(() => _remaining = remaining);
+  }
+
+  @override
+  void dispose() {
+    _timer?.cancel();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    if (_remaining <= Duration.zero) return const SizedBox.shrink();
+    return Row(
+      mainAxisSize: MainAxisSize.min,
+      mainAxisAlignment: MainAxisAlignment.center,
+      children: [
+        const Icon(Icons.timer_outlined, size: 19, color: AppColors.gold),
+        const SizedBox(width: 5),
+        Text(
+          formatCountdown(_remaining),
+          style: widget.style ??
+              const TextStyle(
+                fontSize: 16,
+                fontWeight: FontWeight.bold,
+                color: AppColors.gold,
+              ),
+        ),
+      ],
     );
   }
 }
