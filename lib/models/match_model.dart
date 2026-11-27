@@ -53,9 +53,10 @@ class YallaMatch {
 
   /// A stream link is only playable when it points somewhere other than
   /// the homepage / match-list pages themselves. The website currently
-  /// links every match card to its homepage (yallah.media redirects to
-  /// yallamedia.info), so that link must NOT count as a stream — otherwise
-  /// tapping a match would just open the homepage again in the player.
+  /// links every match card to its homepage (yallah.media and
+  /// yallamedia.info redirect to yallah.news), so that link must NOT count
+  /// as a stream — otherwise tapping a match would just open the homepage
+  /// again in the player.
   /// A real per-match link (a match page or an external player link) is
   /// the only thing that counts as a stream.
   bool get hasStream {
@@ -69,6 +70,9 @@ class YallaMatch {
       'https://yallamedia.info',
       'http://yallamedia.info',
       'https://www.yallamedia.info',
+      'https://yallah.news',
+      'http://yallah.news',
+      'https://www.yallah.news',
       'https://yallah.media/matches-today',
       'https://yallah.media/matches-tomorrow',
       'https://yallah.media/matches-yesterday',
@@ -77,6 +81,10 @@ class YallaMatch {
       'https://yallamedia.info/matches-tomorrow',
       'https://yallamedia.info/matches-yesterday',
       'https://yallamedia.info/yalla-live',
+      'https://yallah.news/matches-today',
+      'https://yallah.news/matches-tomorrow',
+      'https://yallah.news/matches-yesterday',
+      'https://yallah.news/yalla-live',
     };
     if (noStream.contains(n)) return false;
     return u.startsWith('http');
