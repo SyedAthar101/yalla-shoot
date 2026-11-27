@@ -8,7 +8,7 @@ import 'package:shared_preferences/shared_preferences.dart';
 /// never needs a new APK again.
 ///
 /// The site has moved domains repeatedly (yallamedia.info ->
-/// yalla.show -> yallah.news, all within Nov 2026). Instead of
+/// yalla.show -> yallah.news -> yalla.loans, all within Nov 2026). Instead of
 /// hardcoding the domain, the app fetches a tiny remote config —
 /// app_config.json in the GitHub repo (SyedAthar101/yalla-shoot,
 /// main branch) — and uses its "base_url". From now on, a domain
@@ -21,7 +21,7 @@ import 'package:shared_preferences/shared_preferences.dart';
 ///   3. https://yallah.media — the site's original domain, which
 ///      redirects to the current one; the HTTP client follows
 ///      redirects, so requests still land on the live site.
-///   4. The hardcoded fallback (https://yallah.news) is the value
+///   4. The hardcoded fallback (https://yalla.loans) is the value
 ///      used until resolution finishes, and [candidateBases] always
 ///      keeps it as a last-resort request target.
 class SiteConfig {
@@ -32,7 +32,7 @@ class SiteConfig {
   static const String legacyBase = 'https://yallah.media';
 
   /// Last-resort hardcoded base (the site's domain as of v1.3.0).
-  static const String hardcodedBase = 'https://yallah.news';
+  static const String hardcodedBase = 'https://yalla.loans';
 
   /// SharedPreferences key for the last resolved base URL.
   static const String cacheKey = 'yalla_site_base_url';
