@@ -2,8 +2,14 @@ import 'package:flutter/material.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
 
 import 'screens/home_screen.dart';
+import 'services/site_config.dart';
 
 void main() {
+  WidgetsFlutterBinding.ensureInitialized();
+  // Start resolving the site's current domain (remote config) right
+  // away; YallaApi awaits the same future before fetching, so the
+  // first load already uses the resolved base.
+  SiteConfig.ensureResolved();
   runApp(const YallaShootApp());
 }
 
@@ -32,9 +38,11 @@ class YallaShootApp extends StatelessWidget {
           surface: Color(0xFF1B1B24),
         ),
         appBarTheme: const AppBarTheme(
-          backgroundColor: Color(0xFF931800),
+          // Transparent so AppBars can paint the red gradient themselves.
+          backgroundColor: Colors.transparent,
           foregroundColor: Colors.white,
           centerTitle: false,
+          elevation: 0,
         ),
         fontFamily: null,
       ),
