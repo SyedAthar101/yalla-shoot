@@ -4,6 +4,7 @@ import 'package:flutter/material.dart';
 
 import '../models/match_model.dart';
 import '../services/favorites_service.dart';
+import '../services/site_config.dart';
 import '../services/yalla_api.dart';
 import '../widgets/match_card.dart';
 import '../widgets/ui_kit.dart';
@@ -444,7 +445,7 @@ class _HomeScreenState extends State<HomeScreen>
           const SizedBox(height: 16),
           Center(
             child: Text(
-              'المصدر: yallah.news — يتم التحديث تلقائياً كل دقيقة',
+              'المصدر: ${Uri.parse(SiteConfig.baseUrl).host} — يتم التحديث تلقائياً كل دقيقة',
               style: TextStyle(
                   color: Colors.white.withOpacity(0.4), fontSize: 13),
             ),
