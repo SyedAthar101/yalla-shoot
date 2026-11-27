@@ -1,3 +1,5 @@
+import '../services/site_config.dart';
+
 enum MatchStatus { live, upcoming, finished, unknown }
 
 class YallaMatch {
@@ -63,7 +65,7 @@ class YallaMatch {
     final u = streamUrl.trim();
     if (u.isEmpty) return false;
     final n = u.toLowerCase().replaceAll(RegExp(r'/+$'), '');
-    const noStream = {
+    final noStream = <String>{
       'https://yallah.media',
       'http://yallah.media',
       'https://www.yallah.media',
@@ -86,6 +88,21 @@ class YallaMatch {
       'https://yallah.news/matches-yesterday',
       'https://yallah.news/yalla-live',
     };
+    // The site's currently resolved base (SiteConfig — the domain
+    // can change without an app update) and its list pages are not
+    // streams either, whatever domain the site lives on next.
+    final base = SiteConfig.baseUrl.toLowerCase();
+    noStream.add(base);
+    noStream.add('$base/matches-today');
+    noStream.add('$base/matches-tomorrow');
+    noStream.add('$base/matches-yesterday');
+    noStream.add('$base/yalla-live');
+    final baseUri = Uri.tryParse(base);
+    if (baseUri != null &&
+        baseUri.host.isNotEmpty &&
+        !baseUri.host.startsWith('www.')) {
+      noStream.add('${baseUri.scheme}://www.${baseUri.host}');
+    }
     if (noStream.contains(n)) return false;
     return u.startsWith('http');
   }
