@@ -1,7 +1,7 @@
 name: yalla_shoot
 description: "Yalla Shoot - يلا شوت | مباريات اليوم بث مباشر - official app. The site base URL is resolved at startup from a remote config (app_config.json in the GitHub repo) and cached, so site domain changes no longer require an app update."
 publish_to: 'none'
-version: 1.3.0+7
+version: 1.3.1+8
 
 environment:
   sdk: ^3.4.0
