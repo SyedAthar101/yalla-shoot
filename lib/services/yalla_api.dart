@@ -10,18 +10,19 @@ import '../models/match_model.dart';
 ///
 /// Priority:
 ///   1. The official JSON feed from the Yalla Matches API plugin
-///      (https://yallamedia.info/wp-json/yalla/v1/matches) — install the
+///      (https://yallah.news/wp-json/yalla/v1/matches) — install the
 ///      plugin in wordpress-plugin/ on the site and this becomes
 ///      the live source, updated whenever the site is updated.
 ///   2. Fallback: parse the site's own rendered homepage for the day
 ///      (today / tomorrow / yesterday). Same data the website shows,
 ///      no third-party source involved.
 ///
-/// Note: yallah.media 301-redirects to yallamedia.info (the site's
-/// canonical domain), so the app talks to yallamedia.info directly
-/// instead of depending on that redirect on every request.
+/// Note: yallah.media and yallamedia.info 301-redirect to yallah.news (the
+/// site's canonical domain since 2026-11-27), so the app talks to
+/// yallah.news directly instead of depending on that redirect on every
+/// request.
 class YallaApi {
-  static const String siteBase = 'https://yallamedia.info';
+  static const String siteBase = 'https://yallah.news';
   static const String jsonFeedBase = '$siteBase/wp-json/yalla/v1/matches';
 
   static String dayUrl(String day) {
@@ -72,7 +73,7 @@ class YallaApi {
       'Accept': 'text/html',
     }).timeout(const Duration(seconds: 30));
     if (res.statusCode != 200) {
-      throw Exception('yallah.media se data nahi mila (${res.statusCode})');
+      throw Exception('yallah.news se data nahi mila (${res.statusCode})');
     }
     return parseMatchesHtml(utf8.decode(res.bodyBytes), day);
   }
