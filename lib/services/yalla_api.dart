@@ -5,52 +5,69 @@ import 'package:html/parser.dart' as html_parser;
 import 'package:http/http.dart' as http;
 
 import '../models/match_model.dart';
+import 'site_config.dart';
 
 /// Data source for the Yalla Shoot app.
 ///
 /// Priority:
 ///   1. The official JSON feed from the Yalla Matches API plugin
-///      (https://yallah.news/wp-json/yalla/v1/matches) — install the
-///      plugin in wordpress-plugin/ on the site and this becomes
-///      the live source, updated whenever the site is updated.
+///      (<base>/wp-json/yalla/v1/matches) — install the plugin in
+///      wordpress-plugin/ on the site and this becomes the live
+///      source, updated whenever the site is updated.
 ///   2. Fallback: parse the site's own rendered homepage for the day
 ///      (today / tomorrow / yesterday). Same data the website shows,
 ///      no third-party source involved.
 ///
-/// Note: yallah.media and yallamedia.info 301-redirect to yallah.news (the
-/// site's canonical domain since 2026-11-27), so the app talks to
-/// yallah.news directly instead of depending on that redirect on every
-/// request.
+/// The site's domain is NOT hardcoded here: [SiteConfig] resolves
+/// it at startup from a remote config (app_config.json in the app
+/// repo), so when the site moves domains again, installed apps
+/// follow automatically — no APK update needed. Requests walk
+/// [SiteConfig.candidateBases] in order — resolved base, then the
+/// original yallah.media domain (which redirects to the current
+/// site), then the hardcoded fallback — until one base answers.
 class YallaApi {
-  static const String siteBase = 'https://yallah.news';
-  static const String jsonFeedBase = '$siteBase/wp-json/yalla/v1/matches';
+  static String jsonFeedUrl(String base, String day) =>
+      '$base/wp-json/yalla/v1/matches?day=$day';
 
-  static String dayUrl(String day) {
+  static String dayUrl(String base, String day) {
     switch (day) {
       case 'tomorrow':
-        return '$siteBase/matches-tomorrow/';
+        return '$base/matches-tomorrow/';
       case 'yesterday':
-        return '$siteBase/matches-yesterday/';
+        return '$base/matches-yesterday/';
       case 'today':
       default:
-        return '$siteBase/matches-today/';
+        return '$base/matches-today/';
     }
   }
 
   static Future<List<YallaMatch>> fetchMatches(String day) async {
-    // 1) Try the JSON feed first.
-    try {
-      final feed = await _fetchFromJsonFeed(day);
-      if (feed.isNotEmpty) return feed;
-    } catch (_) {
-      // Fall through to HTML parsing — feed not installed yet.
+    await SiteConfig.ensureResolved();
+    Object? lastError;
+    for (final base in SiteConfig.candidateBases()) {
+      // 1) Try the JSON feed first.
+      try {
+        final feed = await _fetchFromJsonFeed(day, base);
+        if (feed.isNotEmpty) return feed;
+      } catch (_) {
+        // Fall through to HTML parsing — feed not installed yet.
+      }
+      // 2) Fallback: the site's own page. A 200 response (even an
+      // empty list — e.g. no matches tomorrow yet) is a success;
+      // only a failure moves on to the next candidate base.
+      try {
+        return await _fetchFromHtml(day, base);
+      } catch (e) {
+        lastError = e;
+      }
     }
-    // 2) Fallback: the site's own page.
-    return _fetchFromHtml(day);
+    throw lastError ??
+        Exception('Site se data nahi mila — koi bhi domain kaam nahi kiya');
   }
 
-  static Future<List<YallaMatch>> _fetchFromJsonFeed(String day) async {
-    final uri = Uri.parse('$jsonFeedBase?day=$day');
+  static Future<List<YallaMatch>> _fetchFromJsonFeed(
+      String day, String base) async {
+    final uri = Uri.parse(jsonFeedUrl(base, day));
     final res = await http
         .get(uri, headers: {'Accept': 'application/json'})
         .timeout(const Duration(seconds: 5));
@@ -65,15 +82,16 @@ class YallaApi {
         .toList();
   }
 
-  static Future<List<YallaMatch>> _fetchFromHtml(String day) async {
-    final uri = Uri.parse(dayUrl(day));
+  static Future<List<YallaMatch>> _fetchFromHtml(
+      String day, String base) async {
+    final uri = Uri.parse(dayUrl(base, day));
     final res = await http.get(uri, headers: {
       'User-Agent':
           'Mozilla/5.0 (Linux; Android 13) YallaShootApp/1.0',
       'Accept': 'text/html',
     }).timeout(const Duration(seconds: 30));
     if (res.statusCode != 200) {
-      throw Exception('yallah.news se data nahi mila (${res.statusCode})');
+      throw Exception('${uri.host} se data nahi mila (${res.statusCode})');
     }
     return parseMatchesHtml(utf8.decode(res.bodyBytes), day);
   }
