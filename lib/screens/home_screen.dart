@@ -444,7 +444,7 @@ class _HomeScreenState extends State<HomeScreen>
           const SizedBox(height: 16),
           Center(
             child: Text(
-              'المصدر: yallah.media — يتم التحديث تلقائياً كل دقيقة',
+              'المصدر: yallah.news — يتم التحديث تلقائياً كل دقيقة',
               style: TextStyle(
                   color: Colors.white.withOpacity(0.4), fontSize: 13),
             ),
